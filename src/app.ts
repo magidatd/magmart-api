@@ -1,8 +1,9 @@
-import express from "express";
-import cors from "cors";
+import express from 'express';
+import cors from 'cors';
 
-import itemRoutes from "./routes/item-routes";
-import { errorHandler } from "./middleware/error-handler";
+import itemRoutes from './routes/item-routes';
+import userRoutes from './routes/user-routes';
+import { errorHandler } from './middleware/error-handler';
 
 const app = express();
 
@@ -13,7 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // set up api routes
-app.use("/api/items", itemRoutes);
+app.use('/api/items', itemRoutes);
+app.use('/api/users', userRoutes);
 
 // set up global error handler (this should be the last middleware in the app stack)
 app.use(errorHandler);

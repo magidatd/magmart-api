@@ -1,0 +1,41 @@
+export interface User {
+  id?: number;
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface UserWithRefreshToken extends User {
+  refreshTokens: {
+    id: number;
+    hashedToken: string;
+    revoked: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    expireAt: Date;
+  };
+}
+
+export interface UserWithAddress extends User {
+  address: {
+    id: number;
+    streetAddress: string;
+    postalCode: string;
+    city: string;
+  };
+}
+
+export interface UserWithOrders extends User {
+  orders: {
+    id: number;
+    estimatedDeliveryTime: string;
+    actualDwliveryTime: string;
+    items: number;
+    price: number;
+    discount: number;
+    totalPrice: number;
+  }[];
+}

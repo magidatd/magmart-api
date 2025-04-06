@@ -17,8 +17,8 @@ const user = pgTable('users', {
   ),
 });
 
-export const userRelations = relations(user, ({ many }) => ({
-  addresses: many(address),
+export const userRelations = relations(user, ({ one, many }) => ({
+  address: one(address),
   refreshTokens: many(refreshTokens),
   orders: many(order),
 }));
