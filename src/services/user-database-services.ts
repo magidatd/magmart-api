@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/user';
 import user, { default as UsersTable } from '../database/schema/user';
 import db from '../database';
-import { eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 
 /**
  * create a new user in database
@@ -32,12 +32,34 @@ export const createUserService = async (user: User): Promise<User> => {
 };
 
 /**
+ * get all users from the database
+ *
+ * @returns User[]
+ */
+export const getAllUsersService = async (
+  sortOrder = 'asc',
+): Promise<User[]> => {
+  const users = await db.query.user.findMany({
+    orderBy: [sortOrder === 'asc' ? asc(user.createdAt) : desc(user.createdAt)],
+  });
+
+  return users.map((user) => ({
+    ...user,
+    createdAt: new Date(user.createdAt),
+    updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
+    role: user.role ?? undefined,
+  }));
+};
+
+/**
  * check if email already exists in database
  *
  * @param email
  * @returns boolean
  */
-export const isEmailInDatabase = async (email: string): Promise<boolean> => {
+export const isEmailInDatabaseService = async (
+  email: string,
+): Promise<boolean> => {
   const userInDb = await db.query.user.findFirst({
     where: eq(user.email, email),
   });
@@ -46,12 +68,35 @@ export const isEmailInDatabase = async (email: string): Promise<boolean> => {
 };
 
 /**
+ * get user by id from database
+ *
+ * @param id
+ * @returns User | null
+ */
+export const getUserByIdService = async (id: number): Promise<User | null> => {
+  const userInDb = await db.query.user.findFirst({
+    where: eq(user.id, id),
+  });
+
+  if (!userInDb) return null;
+
+  return {
+    ...userInDb,
+    role: userInDb.role ?? undefined,
+    createdAt: new Date(userInDb.createdAt),
+    updatedAt: userInDb.updatedAt ? new Date(userInDb.updatedAt) : undefined,
+  };
+};
+
+/**
  * get user by email from database
  *
  * @param email
  * @returns User | null
  */
-export const getUserByEmail = async (email: string): Promise<User | null> => {
+export const getUserByEmailService = async (
+  email: string,
+): Promise<User | null> => {
   const userInDb = await db.query.user.findFirst({
     where: eq(user.email, email),
   });
