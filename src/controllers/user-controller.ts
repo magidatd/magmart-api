@@ -6,6 +6,7 @@ import {
   getUserByIdService,
   getUserByEmailService,
   updateUserService,
+  deleteUserService,
 } from '../services/user-database-services';
 import {
   isValidPassword,
@@ -380,6 +381,52 @@ export const updateUserController = async (
         createdAt: updatedUser.createdAt?.toISOString(),
         updatedAt: updatedUser.updatedAt?.toISOString(),
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * delete a single user by id
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns Promise<void>
+ */
+export const deleteUserController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // check if id is a number
+    if (isNaN(Number(id))) {
+      res.status(500).json({
+        message: 'Internal Server Error.',
+      });
+
+      exit(1);
+    }
+
+    const userId = parseInt(id, 10);
+
+    // call deleteUserService function to delete user from database
+    const deletedUser = await deleteUserService(userId);
+
+    if (!deletedUser) {
+      res.status(404).json({
+        message: `User with id ${userId} not found.`,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: `User with id ${userId} deleted successfully.`,
     });
   } catch (error) {
     next(error);

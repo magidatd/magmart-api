@@ -161,6 +161,24 @@ export const updateUserService = async (
 };
 
 /**
+ * delete user from database
+ *
+ * @param id
+ * @returns boolean
+ */
+export const deleteUserService = async (id: number): Promise<boolean> => {
+  const userInDb = await db.query.user.findFirst({
+    where: eq(user.id, id),
+  });
+
+  if (!userInDb) return false;
+
+  await db.delete(UsersTable).where(eq(user.id, id));
+
+  return true;
+};
+
+/**
  * create a new hashed password using bcryptjs
  *
  * @param password
