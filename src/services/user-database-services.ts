@@ -4,6 +4,13 @@ import user, { default as UsersTable } from '../database/schema/user';
 import db from '../database';
 import { asc, desc, eq } from 'drizzle-orm';
 
+interface PartialUserData {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: string | null;
+}
+
 /**
  * create a new user in database
  *
@@ -108,6 +115,48 @@ export const getUserByEmailService = async (
     role: userInDb.role ?? undefined,
     createdAt: new Date(userInDb.createdAt),
     updatedAt: userInDb.updatedAt ? new Date(userInDb.updatedAt) : undefined,
+  };
+};
+
+/**
+ * update user in database
+ *
+ * @param id
+ * @param partialData
+ * @returns User | null
+ */
+export const updateUserService = async (
+  id: number,
+  partialData: Partial<PartialUserData>,
+): Promise<User | null> => {
+  const userInDb = await db.query.user.findFirst({
+    where: eq(user.id, id),
+  });
+
+  if (!userInDb) return null;
+
+  const { name, email, password, role } = userInDb;
+
+  const data = { name, email, password, role };
+
+  const updateUserData = {
+    ...data,
+    ...partialData,
+  };
+
+  const updatedUser = await db
+    .update(UsersTable)
+    .set(updateUserData)
+    .where(eq(user.id, id))
+    .returning();
+
+  return {
+    ...updatedUser[0],
+    role: updatedUser[0].role ?? undefined,
+    createdAt: new Date(updatedUser[0].createdAt),
+    updatedAt: updatedUser[0].updatedAt
+      ? new Date(updatedUser[0].updatedAt)
+      : undefined,
   };
 };
 
