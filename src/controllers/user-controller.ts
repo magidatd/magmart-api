@@ -7,6 +7,8 @@ import {
   getUserByEmailService,
   updateUserService,
   deleteUserService,
+  createUserWithAddressService,
+  getUserWithAddressByIdService,
 } from '../services/user-database-services';
 import {
   isValidPassword,
@@ -15,6 +17,7 @@ import {
   isValidName,
   isValidRole,
   isValidUrl,
+  isValidPhone,
 } from '../utilities/validators';
 import { get } from 'http';
 import { exit } from 'process';
@@ -469,6 +472,204 @@ export const deleteUserController = async (
 
     res.status(200).json({
       message: `User with id ${userId} deleted successfully.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * create a new user with address in database
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns Promise<void>
+ */
+export const createUserWithAddressController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    // extract user data from request body
+    const {
+      firstName,
+      lastName,
+      password,
+      email,
+      streetAddress,
+      postalCode,
+      city,
+      phone,
+      country,
+    } = req.body;
+
+    // sanitize user data
+    const sanitizeFirstName = sanitizeString(firstName);
+    const sanitizeLastName = sanitizeString(lastName);
+    const sanitizeEmail = sanitizeString(email);
+    const sanitizePassword = sanitizeString(password);
+    const sanitizeStreetAddress = sanitizeString(streetAddress);
+    const sanitizePostalCode = sanitizeString(postalCode);
+    const sanitizeCity = sanitizeString(city);
+    const sanitizePhone = sanitizeString(phone);
+    const sanitizeCountry = sanitizeString(country);
+
+    // validate user data
+    if (
+      !firstName ||
+      !lastName ||
+      !password ||
+      !email ||
+      !streetAddress ||
+      !postalCode ||
+      !city ||
+      !phone ||
+      !country
+    ) {
+      res.status(400).json({
+        message: 'All fields are required',
+      });
+
+      return;
+    }
+
+    if (firstName && !isValidName(sanitizeFirstName)) {
+      res.status(400).json({
+        message: 'First name is not valid.',
+      });
+
+      return;
+    }
+
+    if (lastName && !isValidName(sanitizeLastName)) {
+      res.status(400).json({
+        message: 'Last name is not valid.',
+      });
+
+      return;
+    }
+
+    if (email && !isValidEmail(sanitizeEmail)) {
+      res.status(400).json({
+        message: 'Email is not valid.',
+      });
+
+      return;
+    }
+
+    if (password && !isValidPassword(sanitizePassword)) {
+      res.status(400).json({
+        message:
+          'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+      });
+
+      return;
+    }
+
+    if (city && !isValidName(sanitizeCity)) {
+      res.status(400).json({
+        message: 'City name is not valid.',
+      });
+
+      return;
+    }
+
+    if (phone && !isValidPhone(sanitizePhone)) {
+      res.status(400).json({
+        message: 'Phone is not valid.',
+      });
+
+      return;
+    }
+
+    // check if email already exists in database
+    const emailExists = await isEmailInDatabaseService(sanitizeEmail);
+
+    if (emailExists) {
+      res.status(400).json({
+        message: 'Email is already in use.',
+      });
+
+      return;
+    }
+
+    // create user object
+    const user = {
+      firstName: sanitizeFirstName,
+      lastName: sanitizeLastName,
+      email: sanitizeEmail,
+      password: sanitizePassword,
+    };
+
+    // create address object
+    const address = {
+      streetAddress: sanitizeStreetAddress,
+      postalCode: sanitizePostalCode,
+      city: sanitizeCity,
+      phone: sanitizePhone,
+      country: sanitizeCountry,
+    };
+
+    // call createUserWithAddressService function to create new user with address in database
+    const createdUserWithAddress = await createUserWithAddressService(
+      user,
+      address,
+    );
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: createdUserWithAddress,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * get a single user with address by id
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns Promise<void>
+ */
+export const getUserWithAddressByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // check if id is a number
+    if (isNaN(Number(id))) {
+      res.status(500).json({
+        message: 'Internal Server Error.',
+      });
+
+      exit(1);
+    }
+
+    const userId = parseInt(id, 10);
+
+    // call getUserWithAddressByIdService function to get user with address
+    const userWithAddress = await getUserWithAddressByIdService(userId);
+
+    if (!userWithAddress) {
+      res.status(404).json({
+        message: `User with id ${userId} not found.`,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: `User with id ${userId} retrieved successfully.`,
+      user: {
+        ...userWithAddress,
+      },
     });
   } catch (error) {
     next(error);

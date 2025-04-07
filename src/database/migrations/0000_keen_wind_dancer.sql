@@ -5,6 +5,7 @@ CREATE TABLE "address" (
 	"userId" integer NOT NULL,
 	"city" text NOT NULL,
 	"phone" text NOT NULL,
+	"country" text NOT NULL,
 	"createdAt" timestamp (3) DEFAULT now(),
 	"updatedAt" timestamp (3)
 );

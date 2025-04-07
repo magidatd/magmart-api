@@ -11,6 +11,7 @@ const address = pgTable('address', {
     .references(() => user.id),
   city: text('city').notNull(),
   phone: text('phone').notNull(),
+  country: text('country').notNull(),
   createdAt: timestamp('createdAt', {
     mode: 'date',
     precision: 3,

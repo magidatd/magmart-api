@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/user';
+import { Address } from '../models/address';
 import user, { default as UsersTable } from '../database/schema/user';
+import address, { default as AddressTable } from '../database/schema/address';
 import db from '../database';
 import { asc, desc, eq } from 'drizzle-orm';
 
@@ -11,6 +13,29 @@ interface PartialUserData {
   email?: string;
   password?: string;
   role?: string | null;
+}
+
+interface PartialAddressData {
+  streetAddress?: string;
+  postalCode?: string;
+  city?: string;
+  phone?: string;
+  country?: string;
+}
+
+interface IntegratedUserData {
+  id: number;
+  userIdInAddress: number;
+  firstName: string;
+  lastName: string;
+  userImage?: string;
+  email: string;
+  password?: string;
+  role?: string | null;
+  streetAddress: string;
+  postalCode: string;
+  city: string;
+  phone: string;
 }
 
 /**
@@ -213,4 +238,112 @@ export const isPasswordCorrect = async (
   hashedPassword: string,
 ): Promise<boolean> => {
   return await bcrypt.compare(password, hashedPassword);
+};
+
+/**
+ * create a new user with address in satabase
+ *
+ * @param user
+ * @param address
+ * @returns IntegratedUserData
+ */
+export const createUserWithAddressService = async (
+  user: User,
+  address: Address,
+): Promise<IntegratedUserData> => {
+  const { firstName, lastName, email, password } = user;
+
+  const hashedPassword = await createHashedPassword(password);
+
+  const newUser = { firstName, lastName, email, password: hashedPassword };
+
+  const { streetAddress, postalCode, city, phone, country } = address;
+
+  const newAddress = { streetAddress, postalCode, city, phone, country };
+
+  const createdUser: IntegratedUserData = await db.transaction(async (tx) => {
+    const [createdUserTx] = await tx
+      .insert(UsersTable)
+      .values(newUser)
+      .returning();
+
+    const [createdAddressTx] = await tx
+      .insert(AddressTable)
+      .values({
+        ...newAddress,
+        userId: createdUserTx.id,
+      })
+      .returning();
+
+    return {
+      id: createdUserTx.id,
+      userIdInAddress: createdAddressTx.userId,
+      firstName: createdUserTx.firstName,
+      lastName: createdUserTx.lastName,
+      email: createdUserTx.email,
+      password: createdUserTx.password,
+      role: createdUserTx.role ?? null,
+      streetAddress: createdAddressTx.streetAddress,
+      postalCode: createdAddressTx.postalCode,
+      city: createdAddressTx.city,
+      phone: createdAddressTx.phone,
+      country: createdAddressTx.country,
+    };
+  });
+
+  return createdUser;
+};
+
+/**
+ * get user with address by id from database
+ *
+ * @param id
+ * @returns IntegratedUserData / null *
+ */
+export const getUserWithAddressByIdService = async (
+  id: number,
+): Promise<IntegratedUserData | null> => {
+  const userInDb: IntegratedUserData | null = await db.transaction(
+    async (tx) => {
+      const userInDbTx = await tx.query.user.findFirst({
+        where: eq(user.id, id),
+      });
+
+      if (!userInDbTx) {
+        tx.rollback();
+      }
+
+      if (!userInDbTx) {
+        tx.rollback();
+        return null;
+      }
+
+      const userAddressTx = await tx.query.address.findFirst({
+        where: eq(address.userId, userInDbTx.id),
+      });
+
+      if (!userAddressTx) {
+        tx.rollback();
+        return null;
+      }
+
+      return {
+        id: userInDbTx.id,
+        userIdInAddress: userAddressTx.userId,
+        firstName: userInDbTx?.firstName ?? null,
+        lastName: userInDbTx?.lastName ?? '',
+        userImage: userInDbTx.userImage ?? undefined,
+        email: userInDbTx.email,
+        password: userInDbTx.password,
+        role: userInDbTx.role ?? null,
+        streetAddress: userAddressTx.streetAddress,
+        postalCode: userAddressTx.postalCode,
+        city: userAddressTx.city,
+        phone: userAddressTx.phone,
+        country: userAddressTx.country,
+      };
+    },
+  );
+
+  return userInDb;
 };
