@@ -10,6 +10,7 @@ import {
   getUserWithAddressByIdController,
   updateUserWithAddressController,
   deleteUserWithAddressController,
+  getAllUsersWithAddressController,
 } from '../controllers/user-controller';
 
 const router = Router();
@@ -24,5 +25,6 @@ router.post('/user', createUserWithAddressController); // create a user with add
 router.get('/user/:id/address', getUserWithAddressByIdController); // get auser with address by id
 router.put('/user/:id/address', updateUserWithAddressController); // update a user with address relation
 router.delete('/user/:id/address', deleteUserWithAddressController); // delete a user with address relatioon
+router.get('/user', getAllUsersWithAddressController); // get all users with address
 
 export default router;

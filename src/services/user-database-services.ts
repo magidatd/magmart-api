@@ -36,6 +36,7 @@ interface IntegratedUserData {
   postalCode: string;
   city: string;
   phone: string;
+  country: string;
 }
 
 /**
@@ -479,4 +480,49 @@ export const deleteUserWithAddressService = async (
   });
 
   return userInDbDeleted;
+};
+
+/**
+ * get all users with address from the database
+ *
+ * @returns IntegratedUserData[]
+ */
+export const getAllUsersWithAddressService = async (): Promise<
+  IntegratedUserData[]
+> => {
+  const users = await db
+    .select({
+      id: user.id,
+      userIdInAddress: address.userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      userImage: user.userImage,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+      streetAddress: address.streetAddress,
+      postalCode: address.postalCode,
+      city: address.city,
+      phone: address.phone,
+      country: address.country,
+    })
+    .from(user)
+    .leftJoin(address, eq(user.id, address.userId))
+    .orderBy(asc(user.lastName));
+
+  return users.map((user) => ({
+    id: user.id,
+    userIdInAddress: user.userIdInAddress ?? 0, // Ensure userIdInAddress is a number
+    firstName: user.firstName ?? '',
+    lastName: user.lastName ?? '',
+    userImage: user.userImage ?? undefined,
+    email: user.email ?? '',
+    password: user.password ?? '',
+    role: user.role ?? null,
+    streetAddress: user.streetAddress ?? '',
+    postalCode: user.postalCode ?? '',
+    city: user.city ?? '',
+    phone: user.phone ?? '',
+    country: user.country ?? '',
+  }));
 };

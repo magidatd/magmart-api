@@ -11,6 +11,7 @@ import {
   getUserWithAddressByIdService,
   updateUserWithAddressService,
   deleteUserWithAddressService,
+  getAllUsersWithAddressService,
 } from '../services/user-database-services';
 import {
   isValidPassword,
@@ -974,6 +975,31 @@ export const deleteUserWithAddressController = async (
 
     res.status(200).json({
       message: `User with id ${userId} deleted successfully.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * get all users with address
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns Promise<void>
+ */
+export const getAllUsersWithAddressController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const users = await getAllUsersWithAddressService();
+
+    res.status(200).json({
+      message: 'Users retrieved successfully.',
+      users: users,
     });
   } catch (error) {
     next(error);
