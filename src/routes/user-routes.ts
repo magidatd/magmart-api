@@ -8,6 +8,8 @@ import {
   deleteUserController,
   createUserWithAddressController,
   getUserWithAddressByIdController,
+  updateUserWithAddressController,
+  deleteUserWithAddressController,
 } from '../controllers/user-controller';
 
 const router = Router();
@@ -20,5 +22,7 @@ router.put('/user/:id', updateUserController); // update a user
 router.delete('/user/:id', deleteUserController); // delete a user
 router.post('/user', createUserWithAddressController); // create a user with address relation
 router.get('/user/:id/address', getUserWithAddressByIdController); // get auser with address by id
+router.put('/user/:id/address', updateUserWithAddressController); // update a user with address relation
+router.delete('/user/:id/address', deleteUserWithAddressController); // delete a user with address relatioon
 
 export default router;

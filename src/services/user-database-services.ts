@@ -347,3 +347,136 @@ export const getUserWithAddressByIdService = async (
 
   return userInDb;
 };
+
+/**
+ * update user with address in database
+ *
+ * @param id
+ * @param PartialUserData
+ * @param PartialAddressData
+ * @returns IntegratedUserData | null
+ */
+export const updateUserWithAddressService = async (
+  id: number,
+  partialUserData: Partial<PartialUserData>,
+  partialAddressData: Partial<PartialAddressData>,
+): Promise<IntegratedUserData | null> => {
+  const userInDb = await db.query.user.findFirst({
+    where: eq(user.id, id),
+  });
+
+  if (!userInDb) return null;
+
+  const userAddress = await db.query.address.findFirst({
+    where: eq(address.userId, userInDb.id),
+  });
+
+  if (!userAddress) return null;
+
+  const { firstName, lastName, userImage, email, password, role } = userInDb;
+  const { streetAddress, postalCode, city, phone, country } = userAddress;
+
+  const userData = { firstName, lastName, userImage, email, password, role };
+  const addressData = { streetAddress, postalCode, city, phone, country };
+
+  const updateUserData = {
+    ...userData,
+    ...partialUserData,
+  };
+
+  const updateAddressData = {
+    ...addressData,
+    ...partialAddressData,
+  };
+
+  const userInDbUpdated: IntegratedUserData | null = await db.transaction(
+    async (tx) => {
+      const [updatedUserTx] = await tx
+        .update(UsersTable)
+        .set(updateUserData)
+        .where(eq(user.id, id))
+        .returning();
+
+      if (!updatedUserTx) {
+        tx.rollback();
+        return null;
+      }
+
+      const [updatedAddressTx] = await tx
+        .update(AddressTable)
+        .set(updateAddressData)
+        .where(eq(address.userId, updatedUserTx.id))
+        .returning();
+
+      if (!updatedAddressTx) {
+        tx.rollback();
+        return null;
+      }
+
+      return {
+        id: updatedUserTx.id,
+        userIdInAddress: updatedAddressTx.userId,
+        firstName: updatedUserTx?.firstName ?? null,
+        lastName: updatedUserTx?.lastName ?? '',
+        userImage: updatedUserTx.userImage ?? undefined,
+        email: updatedUserTx.email,
+        password: updatedUserTx.password,
+        role: updatedUserTx.role ?? null,
+        streetAddress: updatedAddressTx.streetAddress,
+        postalCode: updatedAddressTx.postalCode,
+        city: updatedAddressTx.city,
+        phone: updatedAddressTx.phone,
+        country: updatedAddressTx.country,
+      };
+    },
+  );
+
+  return userInDbUpdated;
+};
+
+/**
+ * delete a user with address
+ *
+ * @param id
+ * @returns boolean
+ */
+export const deleteUserWithAddressService = async (
+  id: number,
+): Promise<boolean> => {
+  const userInDb = await db.query.user.findFirst({
+    where: eq(user.id, id),
+  });
+
+  if (!userInDb) return false;
+
+  const userAddress = await db.query.address.findFirst({
+    where: eq(address.userId, userInDb.id),
+  });
+
+  if (!userAddress) return false;
+
+  const userInDbDeleted: boolean = await db.transaction(async (tx) => {
+    const isAddressDeleted = await tx
+      .delete(AddressTable)
+      .where(eq(address.userId, userInDb.id));
+
+    if (!isAddressDeleted) {
+      tx.rollback();
+      return false;
+    }
+
+    const isUserDeleted = await tx
+      .delete(UsersTable)
+      .where(eq(user.id, id))
+      .returning();
+
+    if (!isUserDeleted) {
+      tx.rollback();
+      return false;
+    }
+
+    return true;
+  });
+
+  return userInDbDeleted;
+};

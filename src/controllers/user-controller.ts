@@ -9,6 +9,8 @@ import {
   deleteUserService,
   createUserWithAddressService,
   getUserWithAddressByIdService,
+  updateUserWithAddressService,
+  deleteUserWithAddressService,
 } from '../services/user-database-services';
 import {
   isValidPassword,
@@ -670,6 +672,308 @@ export const getUserWithAddressByIdController = async (
       user: {
         ...userWithAddress,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * update user with address by id
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns Promise<void>
+ */
+export const updateUserWithAddressController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const {
+      firstName,
+      lastName,
+      userImage,
+      email,
+      password,
+      role,
+      streetAddress,
+      postalCode,
+      city,
+      phone,
+      country,
+    } = req.body;
+
+    // check if id is a number
+    if (isNaN(Number(id))) {
+      res.status(500).json({
+        message: 'Internal Server Error.',
+      });
+
+      exit(1);
+    }
+
+    const userId = parseInt(id, 10);
+
+    // sanitize user data
+    const sanitizeFirstName = firstName ? sanitizeString(firstName) : undefined;
+    const sanitizeLastName = lastName ? sanitizeString(lastName) : undefined;
+    const sanitizeEmail = email ? sanitizeString(email) : undefined;
+    const sanitizePassword = password ? sanitizeString(password) : undefined;
+    const sanitizeRole = role ? sanitizeString(role) : undefined;
+    const sanitizeStreetAddress = streetAddress
+      ? sanitizeString(streetAddress)
+      : undefined;
+    const sanitizePostalCode = postalCode
+      ? sanitizeString(postalCode)
+      : undefined;
+    const sanitizeCity = city ? sanitizeString(city) : undefined;
+    const sanitizePhone = phone ? sanitizeString(phone) : undefined;
+    const sanitizeCountry = country ? sanitizeString(country) : undefined;
+
+    // validate user data
+    if (
+      !firstName &&
+      !lastName &&
+      !password &&
+      !email &&
+      !userImage &&
+      !streetAddress &&
+      !postalCode &&
+      !city &&
+      !phone &&
+      !country
+    ) {
+      res.status(400).json({
+        message: 'At least one field is required to update the user.',
+      });
+
+      return;
+    }
+
+    let userData: Record<string, any> = {};
+    let addressData: Record<string, any> = {};
+
+    if (firstName && sanitizeFirstName && !isValidName(sanitizeFirstName)) {
+      res.status(400).json({
+        message: 'First name is not valid.',
+      });
+
+      return;
+    }
+
+    if (lastName && sanitizeLastName && !isValidName(sanitizeLastName)) {
+      res.status(400).json({
+        message: 'Last name is not valid.',
+      });
+
+      return;
+    }
+
+    if (userImage && !isValidUrl(userImage)) {
+      res.status(400).json({
+        message: 'Image storage location not valid.',
+      });
+
+      return;
+    }
+
+    if (email && sanitizeEmail && !isValidEmail(sanitizeEmail)) {
+      res.status(400).json({
+        message: 'Email is not valid.',
+      });
+
+      return;
+    }
+
+    if (password && sanitizePassword && !isValidPassword(sanitizePassword)) {
+      res.status(400).json({
+        message:
+          'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+      });
+
+      return;
+    }
+
+    if (role && sanitizeRole && !isValidRole(sanitizeRole)) {
+      res.status(400).json({
+        message: 'Role can only be admin or customer.',
+      });
+
+      return;
+    }
+
+    if (city && sanitizeCity && !isValidName(sanitizeCity)) {
+      res.status(400).json({
+        message: 'City name is not valid.',
+      });
+
+      return;
+    }
+
+    if (phone && sanitizePhone && !isValidPhone(sanitizePhone)) {
+      res.status(400).json({
+        message: 'Phone is not valid.',
+      });
+
+      return;
+    }
+
+    // check if email already exists in database
+    const emailExists = sanitizeEmail
+      ? await isEmailInDatabaseService(sanitizeEmail)
+      : false;
+
+    if (emailExists) {
+      res.status(400).json({
+        message: 'Email is already in use.',
+      });
+
+      return;
+    }
+
+    // create user object
+    if (sanitizeFirstName) {
+      userData = {
+        ...userData,
+        firstName: sanitizeFirstName,
+      };
+    }
+
+    if (sanitizeLastName) {
+      userData = {
+        ...userData,
+        lastName: sanitizeLastName,
+      };
+    }
+
+    if (userImage) {
+      userData = {
+        ...userData,
+        userImage: userImage,
+      };
+    }
+
+    if (sanitizeEmail) {
+      userData = {
+        ...userData,
+        email: sanitizeEmail,
+      };
+    }
+
+    if (sanitizePassword) {
+      userData = {
+        ...userData,
+        password: sanitizePassword,
+      };
+    }
+
+    if (sanitizeStreetAddress) {
+      addressData = {
+        ...addressData,
+        streetAddress: sanitizeStreetAddress,
+      };
+    }
+
+    if (sanitizePostalCode) {
+      addressData = {
+        ...addressData,
+        postalCode: sanitizePostalCode,
+      };
+    }
+
+    if (sanitizeCity) {
+      addressData = {
+        ...addressData,
+        city: sanitizeCity,
+      };
+    }
+
+    if (sanitizePhone) {
+      addressData = {
+        ...addressData,
+        phone: sanitizePhone,
+      };
+    }
+
+    if (sanitizeCountry) {
+      addressData = {
+        ...addressData,
+        country: sanitizeCountry,
+      };
+    }
+    // create address object
+
+    // call updateUserWithAddressService function to update user in database
+    const updatedUser = await updateUserWithAddressService(
+      userId,
+      userData,
+      addressData,
+    );
+
+    if (!updatedUser) {
+      res.status(404).json({
+        message: `User with id ${userId} not found.`,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: `User with id ${userId} updated successfully.`,
+      user: {
+        ...updatedUser,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * delete a single user with address by id
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns Promise<void>
+ */
+export const deleteUserWithAddressController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // check if id is a number
+    if (isNaN(Number(id))) {
+      res.status(500).json({
+        message: 'Internal Server Error.',
+      });
+
+      exit(1);
+    }
+
+    const userId = parseInt(id, 10);
+
+    // call deleteUserWithAddressService function to delete user from database
+    const deletedUser = await deleteUserWithAddressService(userId);
+
+    if (!deletedUser) {
+      res.status(404).json({
+        message: `User with id ${userId} not found.`,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: `User with id ${userId} deleted successfully.`,
     });
   } catch (error) {
     next(error);
