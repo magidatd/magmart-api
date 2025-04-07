@@ -23,7 +23,10 @@ const orderProductItem = pgTable('orderProductItem', {
   itemPrice: numeric('itemPrice', { precision: 12, scale: 2 }).notNull(),
   price: numeric('price', { precision: 12, scale: 2 }).notNull(),
   comment: text('comment'),
-  createdAt: timestamp('createdAt', { mode: 'string' }).notNull().defaultNow(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
 });
 
 export const orderProductItemRelations = relations(

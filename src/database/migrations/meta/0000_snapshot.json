@@ -1,5 +1,5 @@
 {
-  "id": "233c2598-e258-40ab-a40a-5037377cef5f",
+  "id": "75442d87-dd1c-4932-8298-b85816091562",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -49,9 +49,15 @@
           "primaryKey": false,
           "notNull": true
         },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
@@ -114,7 +120,7 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
@@ -208,9 +214,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         },
         "updatedAt": {
@@ -313,9 +319,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         }
       },
@@ -389,9 +395,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         }
       },
@@ -635,9 +641,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         },
         "updatedAt": {
@@ -697,8 +703,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.RefreshTokens": {
-      "name": "RefreshTokens",
+    "public.refreshTokens": {
+      "name": "refreshTokens",
       "schema": "",
       "columns": {
         "id": {
@@ -708,7 +714,7 @@
           "notNull": true,
           "identity": {
             "type": "always",
-            "name": "RefreshTokens_id_seq",
+            "name": "refreshTokens_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1000",
@@ -739,9 +745,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         },
         "updatedAt": {
@@ -759,9 +765,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "RefreshTokens_userId_users_id_fk": {
-          "name": "RefreshTokens_userId_users_id_fk",
-          "tableFrom": "RefreshTokens",
+        "refreshTokens_userId_users_id_fk": {
+          "name": "refreshTokens_userId_users_id_fk",
+          "tableFrom": "refreshTokens",
           "tableTo": "users",
           "columnsFrom": [
             "userId"
@@ -775,8 +781,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "RefreshTokens_hashedToken_unique": {
-          "name": "RefreshTokens_hashedToken_unique",
+        "refreshTokens_hashedToken_unique": {
+          "name": "refreshTokens_hashedToken_unique",
           "nullsNotDistinct": false,
           "columns": [
             "hashedToken"
@@ -816,9 +822,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         },
         "updatedAt": {
@@ -865,11 +871,23 @@
             "cycle": false
           }
         },
-        "name": {
-          "name": "name",
+        "firstName": {
+          "name": "firstName",
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "lastName": {
+          "name": "lastName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userImage": {
+          "name": "userImage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "email": {
           "name": "email",
@@ -892,9 +910,9 @@
         },
         "createdAt": {
           "name": "createdAt",
-          "type": "timestamp",
+          "type": "timestamp (3)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         },
         "updatedAt": {

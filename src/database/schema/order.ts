@@ -16,7 +16,10 @@ const order = pgTable('orders', {
   price: numeric('price', { precision: 12, scale: 2 }).notNull(),
   discount: numeric('discount', { precision: 12, scale: 2 }).default('0'),
   totalPrice: numeric('totalPrice', { precision: 12, scale: 2 }).notNull(),
-  createdAt: timestamp('createdAt', { mode: 'string' }).notNull().defaultNow(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
   updatedAt: timestamp({ mode: 'date', precision: 3 }).$onUpdate(
     () => new Date(),
   ),

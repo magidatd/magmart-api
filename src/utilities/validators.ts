@@ -51,6 +51,15 @@ export const sanitizeString = (str: string): string => {
   return validator.escape(str);
 };
 
+export const isValidUrl = (url: string): any => {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 const NAME_REGEX =
   /^[a-zA-Z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01FF]+([ \-']{0,1}[a-zA-Z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01FF]+){0,2}[.]{0,1}$/;
 

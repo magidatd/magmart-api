@@ -7,11 +7,16 @@ import order from './order';
 
 const user = pgTable('users', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1000 }),
-  name: text('name').notNull(),
+  firstName: text('firstName').notNull(),
+  lastName: text('lastName').notNull(),
+  userImage: text('userImage'),
   email: text('email').notNull().unique(),
   password: text('password').notNull(),
   role: text('role').default('customer'),
-  createdAt: timestamp('createdAt', { mode: 'string' }).notNull().defaultNow(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
   updatedAt: timestamp({ mode: 'date', precision: 3 }).$onUpdate(
     () => new Date(),
   ),

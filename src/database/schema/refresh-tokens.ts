@@ -8,14 +8,17 @@ import {
 import user from './user';
 import { relations } from 'drizzle-orm';
 
-const refreshTokens = pgTable('RefreshTokens', {
+const refreshTokens = pgTable('refreshTokens', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity({ startWith: 1000 }),
   hashedToken: text('hashedToken').notNull().unique(),
   userId: integer('userId')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   revoked: boolean('revoked').default(false),
-  createdAt: timestamp('createdAt', { mode: 'string' }).notNull().defaultNow(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
   updatedAt: timestamp({ mode: 'date', precision: 3 }).$onUpdate(
     () => new Date(),
   ),

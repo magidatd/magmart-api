@@ -11,7 +11,10 @@ const orderStatus = pgTable('orderStatus', {
   statusCatalogId: integer('statusCatalogId')
     .notNull()
     .references(() => statusCatalog.id),
-  createdAt: timestamp('createdAt', { mode: 'string' }).notNull().defaultNow(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
 });
 
 export const orderStatusRelations = relations(orderStatus, ({ one }) => ({

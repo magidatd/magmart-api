@@ -5,7 +5,9 @@ import db from '../database';
 import { asc, desc, eq } from 'drizzle-orm';
 
 interface PartialUserData {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
+  userImage?: string;
   email?: string;
   password?: string;
   role?: string | null;
@@ -19,22 +21,25 @@ interface PartialUserData {
  */
 export const createUserService = async (user: User): Promise<User> => {
   // extract user data from User object
-  const { name, email, password } = user;
+  const { firstName, lastName, email, password } = user;
 
   // call createHashedPassword function to hash the password
   const hashedPassword = await createHashedPassword(password);
 
-  const newUser = { name, email, password: hashedPassword };
+  const newUser = { firstName, lastName, email, password: hashedPassword };
 
   const [createdUser] = await db.insert(UsersTable).values(newUser).returning();
 
   return {
     ...createdUser,
-    createdAt: new Date(createdUser.createdAt),
+    createdAt: createdUser.createdAt
+      ? new Date(createdUser.createdAt)
+      : undefined,
     updatedAt: createdUser.updatedAt
       ? new Date(createdUser.updatedAt)
       : undefined,
     role: createdUser.role ?? undefined,
+    userImage: createdUser.userImage ?? undefined,
   };
 };
 
@@ -52,9 +57,10 @@ export const getAllUsersService = async (
 
   return users.map((user) => ({
     ...user,
-    createdAt: new Date(user.createdAt),
+    createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
     updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
     role: user.role ?? undefined,
+    userImage: user.userImage ?? undefined,
   }));
 };
 
@@ -90,8 +96,9 @@ export const getUserByIdService = async (id: number): Promise<User | null> => {
   return {
     ...userInDb,
     role: userInDb.role ?? undefined,
-    createdAt: new Date(userInDb.createdAt),
+    createdAt: userInDb.createdAt ? new Date(userInDb.createdAt) : undefined,
     updatedAt: userInDb.updatedAt ? new Date(userInDb.updatedAt) : undefined,
+    userImage: userInDb.userImage ?? undefined,
   };
 };
 
@@ -113,8 +120,9 @@ export const getUserByEmailService = async (
   return {
     ...userInDb,
     role: userInDb.role ?? undefined,
-    createdAt: new Date(userInDb.createdAt),
+    createdAt: userInDb.createdAt ? new Date(userInDb.createdAt) : undefined,
     updatedAt: userInDb.updatedAt ? new Date(userInDb.updatedAt) : undefined,
+    userImage: userInDb.userImage ?? undefined,
   };
 };
 
@@ -135,9 +143,9 @@ export const updateUserService = async (
 
   if (!userInDb) return null;
 
-  const { name, email, password, role } = userInDb;
+  const { firstName, lastName, userImage, email, password, role } = userInDb;
 
-  const data = { name, email, password, role };
+  const data = { firstName, lastName, userImage, email, password, role };
 
   const updateUserData = {
     ...data,
@@ -153,10 +161,13 @@ export const updateUserService = async (
   return {
     ...updatedUser[0],
     role: updatedUser[0].role ?? undefined,
-    createdAt: new Date(updatedUser[0].createdAt),
+    createdAt: updatedUser[0].createdAt
+      ? new Date(updatedUser[0].createdAt)
+      : undefined,
     updatedAt: updatedUser[0].updatedAt
       ? new Date(updatedUser[0].updatedAt)
       : undefined,
+    userImage: updatedUser[0].userImage ?? undefined,
   };
 };
 

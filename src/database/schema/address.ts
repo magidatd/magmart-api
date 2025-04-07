@@ -10,8 +10,12 @@ const address = pgTable('address', {
     .notNull()
     .references(() => user.id),
   city: text('city').notNull(),
-  createdAt: timestamp('createdAt').defaultNow(),
-  updatedAt: timestamp({ mode: 'date', precision: 3 }).$onUpdate(
+  phone: text('phone').notNull(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
+  updatedAt: timestamp('updatedAt', { mode: 'date', precision: 3 }).$onUpdate(
     () => new Date(),
   ),
 });

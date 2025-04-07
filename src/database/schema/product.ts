@@ -53,7 +53,10 @@ const product = pgTable('products', {
   creatorId: integer('creatorIdd')
     .notNull()
     .references(() => user.id),
-  createdAt: timestamp('createdAt', { mode: 'string' }).notNull().defaultNow(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    precision: 3,
+  }).defaultNow(),
   updatedAt: timestamp({ mode: 'date', precision: 3 }).$onUpdate(
     () => new Date(),
   ),

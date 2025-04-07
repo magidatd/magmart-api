@@ -1,6 +1,8 @@
 export interface User {
   id?: number;
-  name: string;
+  firstName: string;
+  lastName: string;
+  userImage?: string;
   email: string;
   password: string;
   role?: string;
@@ -25,6 +27,7 @@ export interface UserWithAddress extends User {
     streetAddress: string;
     postalCode: string;
     city: string;
+    phone: string;
   };
 }
 

@@ -14,6 +14,7 @@ import {
   sanitizeString,
   isValidName,
   isValidRole,
+  isValidUrl,
 } from '../utilities/validators';
 import { get } from 'http';
 import { exit } from 'process';
@@ -34,15 +35,16 @@ export const createUserController = async (
 ): Promise<void> => {
   try {
     // extract user data from request body
-    const { name, password, email } = req.body;
+    const { firstName, lastName, password, email } = req.body;
 
     // sanitize user data
-    const sanitizeName = sanitizeString(name);
+    const sanitizeFirstName = sanitizeString(firstName);
+    const sanitizeLastName = sanitizeString(lastName);
     const sanitizeEmail = sanitizeString(email);
     const sanitizePassword = sanitizeString(password);
 
     // validate user data
-    if (!name || !password || !email) {
+    if (!firstName || !lastName || !password || !email) {
       res.status(400).json({
         message: 'All fields are required',
       });
@@ -50,9 +52,17 @@ export const createUserController = async (
       return;
     }
 
-    if (name && !isValidName(sanitizeName)) {
+    if (firstName && !isValidName(sanitizeFirstName)) {
       res.status(400).json({
-        message: 'Name is not valid.',
+        message: 'First name is not valid.',
+      });
+
+      return;
+    }
+
+    if (lastName && !isValidName(sanitizeLastName)) {
+      res.status(400).json({
+        message: 'Last name is not valid.',
       });
 
       return;
@@ -88,7 +98,8 @@ export const createUserController = async (
 
     // create user object
     const user = {
-      name: sanitizeName,
+      firstName: sanitizeFirstName,
+      lastName: sanitizeLastName,
       email: sanitizeEmail,
       password: sanitizePassword,
     };
@@ -258,7 +269,7 @@ export const updateUserController = async (
   try {
     const { id } = req.params;
 
-    const { name, email, password, role } = req.body;
+    const { firstName, lastName, userImage, email, password, role } = req.body;
 
     // check if id is a number
     if (isNaN(Number(id))) {
@@ -272,13 +283,14 @@ export const updateUserController = async (
     const userId = parseInt(id, 10);
 
     // sanitize user data
-    const sanitizeName = name ? sanitizeString(name) : undefined;
+    const sanitizeFirstName = firstName ? sanitizeString(firstName) : undefined;
+    const sanitizeLastName = lastName ? sanitizeString(lastName) : undefined;
     const sanitizeEmail = email ? sanitizeString(email) : undefined;
     const sanitizePassword = password ? sanitizeString(password) : undefined;
     const sanitizeRole = role ? sanitizeString(role) : undefined;
 
     // validate user data
-    if (!name && !email && !password && !role) {
+    if (!firstName && !lastName && !userImage && !email && !password && !role) {
       res.status(400).json({
         message: 'At least one field is required to update the user.',
       });
@@ -288,9 +300,25 @@ export const updateUserController = async (
 
     let userData: Record<string, any> = {};
 
-    if (name && sanitizeName && !isValidName(sanitizeName)) {
+    if (firstName && sanitizeFirstName && !isValidName(sanitizeFirstName)) {
       res.status(400).json({
-        message: 'Name is not valid.',
+        message: 'First name is not valid.',
+      });
+
+      return;
+    }
+
+    if (lastName && sanitizeLastName && !isValidName(sanitizeLastName)) {
+      res.status(400).json({
+        message: 'Last name is not valid.',
+      });
+
+      return;
+    }
+
+    if (userImage && !isValidUrl(userImage)) {
+      res.status(400).json({
+        message: 'Image storage location not valid.',
       });
 
       return;
@@ -335,10 +363,24 @@ export const updateUserController = async (
     }
 
     // create user object
-    if (sanitizeName) {
+    if (sanitizeFirstName) {
       userData = {
         ...userData,
-        name: sanitizeName,
+        firstName: sanitizeFirstName,
+      };
+    }
+
+    if (sanitizeLastName) {
+      userData = {
+        ...userData,
+        lastName: sanitizeLastName,
+      };
+    }
+
+    if (userImage) {
+      userData = {
+        ...userData,
+        userImage: userImage,
       };
     }
 
