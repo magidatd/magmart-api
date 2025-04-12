@@ -1,0 +1,33 @@
+export interface Product {
+  id?: number;
+  name: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  countInStock: number;
+  sku: string;
+  categoryId: number;
+  brand: string;
+  sizes: string[];
+  colours: string[];
+  collections?: string;
+  material: string;
+  gender: string;
+  images: string[];
+  imageAlt: string[];
+  isFeatured?: boolean;
+  isPublished?: boolean;
+  rating?: number;
+  numberOfReviews?: number;
+  tags?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  dimensionsLength?: number;
+  dimensionsWidth?: number;
+  dimensionsHeight?: number;
+  weight?: number;
+  creatorId?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

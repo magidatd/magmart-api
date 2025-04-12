@@ -1,43 +1,10 @@
 import bcrypt from 'bcryptjs';
-import { User } from '../models/user';
-import { Address } from '../models/address';
+import { IntegratedUserData, PartialUserData, User } from '../models/user';
+import { Address, PartialAddressData } from '../models/address';
 import user, { default as UsersTable } from '../database/schema/user';
 import address, { default as AddressTable } from '../database/schema/address';
 import db from '../database';
 import { asc, desc, eq } from 'drizzle-orm';
-
-interface PartialUserData {
-  firstName?: string;
-  lastName?: string;
-  userImage?: string;
-  email?: string;
-  password?: string;
-  role?: string | null;
-}
-
-interface PartialAddressData {
-  streetAddress?: string;
-  postalCode?: string;
-  city?: string;
-  phone?: string;
-  country?: string;
-}
-
-interface IntegratedUserData {
-  id: number;
-  userIdInAddress: number;
-  firstName: string;
-  lastName: string;
-  userImage?: string;
-  email: string;
-  password?: string;
-  role?: string | null;
-  streetAddress: string;
-  postalCode: string;
-  city: string;
-  phone: string;
-  country: string;
-}
 
 /**
  * create a new user in database
@@ -58,12 +25,8 @@ export const createUserService = async (user: User): Promise<User> => {
 
   return {
     ...createdUser,
-    createdAt: createdUser.createdAt
-      ? new Date(createdUser.createdAt)
-      : undefined,
-    updatedAt: createdUser.updatedAt
-      ? new Date(createdUser.updatedAt)
-      : undefined,
+    createdAt: createdUser.createdAt ? new Date(createdUser.createdAt) : undefined,
+    updatedAt: createdUser.updatedAt ? new Date(createdUser.updatedAt) : undefined,
     role: createdUser.role ?? undefined,
     userImage: createdUser.userImage ?? undefined,
   };
@@ -74,9 +37,7 @@ export const createUserService = async (user: User): Promise<User> => {
  *
  * @returns User[]
  */
-export const getAllUsersService = async (
-  sortOrder = 'asc',
-): Promise<User[]> => {
+export const getAllUsersService = async (sortOrder = 'asc'): Promise<User[]> => {
   const users = await db.query.user.findMany({
     orderBy: [sortOrder === 'asc' ? asc(user.createdAt) : desc(user.createdAt)],
   });
@@ -96,9 +57,7 @@ export const getAllUsersService = async (
  * @param email
  * @returns boolean
  */
-export const isEmailInDatabaseService = async (
-  email: string,
-): Promise<boolean> => {
+export const isEmailInDatabaseService = async (email: string): Promise<boolean> => {
   const userInDb = await db.query.user.findFirst({
     where: eq(user.email, email),
   });
@@ -134,9 +93,7 @@ export const getUserByIdService = async (id: number): Promise<User | null> => {
  * @param email
  * @returns User | null
  */
-export const getUserByEmailService = async (
-  email: string,
-): Promise<User | null> => {
+export const getUserByEmailService = async (email: string): Promise<User | null> => {
   const userInDb = await db.query.user.findFirst({
     where: eq(user.email, email),
   });
@@ -187,12 +144,8 @@ export const updateUserService = async (
   return {
     ...updatedUser[0],
     role: updatedUser[0].role ?? undefined,
-    createdAt: updatedUser[0].createdAt
-      ? new Date(updatedUser[0].createdAt)
-      : undefined,
-    updatedAt: updatedUser[0].updatedAt
-      ? new Date(updatedUser[0].updatedAt)
-      : undefined,
+    createdAt: updatedUser[0].createdAt ? new Date(updatedUser[0].createdAt) : undefined,
+    updatedAt: updatedUser[0].updatedAt ? new Date(updatedUser[0].updatedAt) : undefined,
     userImage: updatedUser[0].userImage ?? undefined,
   };
 };
@@ -263,10 +216,7 @@ export const createUserWithAddressService = async (
   const newAddress = { streetAddress, postalCode, city, phone, country };
 
   const createdUser: IntegratedUserData = await db.transaction(async (tx) => {
-    const [createdUserTx] = await tx
-      .insert(UsersTable)
-      .values(newUser)
-      .returning();
+    const [createdUserTx] = await tx.insert(UsersTable).values(newUser).returning();
 
     const [createdAddressTx] = await tx
       .insert(AddressTable)
@@ -304,47 +254,45 @@ export const createUserWithAddressService = async (
 export const getUserWithAddressByIdService = async (
   id: number,
 ): Promise<IntegratedUserData | null> => {
-  const userInDb: IntegratedUserData | null = await db.transaction(
-    async (tx) => {
-      const userInDbTx = await tx.query.user.findFirst({
-        where: eq(user.id, id),
-      });
+  const userInDb: IntegratedUserData | null = await db.transaction(async (tx) => {
+    const userInDbTx = await tx.query.user.findFirst({
+      where: eq(user.id, id),
+    });
 
-      if (!userInDbTx) {
-        tx.rollback();
-      }
+    if (!userInDbTx) {
+      tx.rollback();
+    }
 
-      if (!userInDbTx) {
-        tx.rollback();
-        return null;
-      }
+    if (!userInDbTx) {
+      tx.rollback();
+      return null;
+    }
 
-      const userAddressTx = await tx.query.address.findFirst({
-        where: eq(address.userId, userInDbTx.id),
-      });
+    const userAddressTx = await tx.query.address.findFirst({
+      where: eq(address.userId, userInDbTx.id),
+    });
 
-      if (!userAddressTx) {
-        tx.rollback();
-        return null;
-      }
+    if (!userAddressTx) {
+      tx.rollback();
+      return null;
+    }
 
-      return {
-        id: userInDbTx.id,
-        userIdInAddress: userAddressTx.userId,
-        firstName: userInDbTx?.firstName ?? null,
-        lastName: userInDbTx?.lastName ?? '',
-        userImage: userInDbTx.userImage ?? undefined,
-        email: userInDbTx.email,
-        password: userInDbTx.password,
-        role: userInDbTx.role ?? null,
-        streetAddress: userAddressTx.streetAddress,
-        postalCode: userAddressTx.postalCode,
-        city: userAddressTx.city,
-        phone: userAddressTx.phone,
-        country: userAddressTx.country,
-      };
-    },
-  );
+    return {
+      id: userInDbTx.id,
+      userIdInAddress: userAddressTx.userId,
+      firstName: userInDbTx?.firstName ?? null,
+      lastName: userInDbTx?.lastName ?? '',
+      userImage: userInDbTx.userImage ?? undefined,
+      email: userInDbTx.email,
+      password: userInDbTx.password,
+      role: userInDbTx.role ?? null,
+      streetAddress: userAddressTx.streetAddress,
+      postalCode: userAddressTx.postalCode,
+      city: userAddressTx.city,
+      phone: userAddressTx.phone,
+      country: userAddressTx.country,
+    };
+  });
 
   return userInDb;
 };
@@ -390,47 +338,45 @@ export const updateUserWithAddressService = async (
     ...partialAddressData,
   };
 
-  const userInDbUpdated: IntegratedUserData | null = await db.transaction(
-    async (tx) => {
-      const [updatedUserTx] = await tx
-        .update(UsersTable)
-        .set(updateUserData)
-        .where(eq(user.id, id))
-        .returning();
+  const userInDbUpdated: IntegratedUserData | null = await db.transaction(async (tx) => {
+    const [updatedUserTx] = await tx
+      .update(UsersTable)
+      .set(updateUserData)
+      .where(eq(user.id, id))
+      .returning();
 
-      if (!updatedUserTx) {
-        tx.rollback();
-        return null;
-      }
+    if (!updatedUserTx) {
+      tx.rollback();
+      return null;
+    }
 
-      const [updatedAddressTx] = await tx
-        .update(AddressTable)
-        .set(updateAddressData)
-        .where(eq(address.userId, updatedUserTx.id))
-        .returning();
+    const [updatedAddressTx] = await tx
+      .update(AddressTable)
+      .set(updateAddressData)
+      .where(eq(address.userId, updatedUserTx.id))
+      .returning();
 
-      if (!updatedAddressTx) {
-        tx.rollback();
-        return null;
-      }
+    if (!updatedAddressTx) {
+      tx.rollback();
+      return null;
+    }
 
-      return {
-        id: updatedUserTx.id,
-        userIdInAddress: updatedAddressTx.userId,
-        firstName: updatedUserTx?.firstName ?? null,
-        lastName: updatedUserTx?.lastName ?? '',
-        userImage: updatedUserTx.userImage ?? undefined,
-        email: updatedUserTx.email,
-        password: updatedUserTx.password,
-        role: updatedUserTx.role ?? null,
-        streetAddress: updatedAddressTx.streetAddress,
-        postalCode: updatedAddressTx.postalCode,
-        city: updatedAddressTx.city,
-        phone: updatedAddressTx.phone,
-        country: updatedAddressTx.country,
-      };
-    },
-  );
+    return {
+      id: updatedUserTx.id,
+      userIdInAddress: updatedAddressTx.userId,
+      firstName: updatedUserTx?.firstName ?? null,
+      lastName: updatedUserTx?.lastName ?? '',
+      userImage: updatedUserTx.userImage ?? undefined,
+      email: updatedUserTx.email,
+      password: updatedUserTx.password,
+      role: updatedUserTx.role ?? null,
+      streetAddress: updatedAddressTx.streetAddress,
+      postalCode: updatedAddressTx.postalCode,
+      city: updatedAddressTx.city,
+      phone: updatedAddressTx.phone,
+      country: updatedAddressTx.country,
+    };
+  });
 
   return userInDbUpdated;
 };
@@ -441,9 +387,7 @@ export const updateUserWithAddressService = async (
  * @param id
  * @returns boolean
  */
-export const deleteUserWithAddressService = async (
-  id: number,
-): Promise<boolean> => {
+export const deleteUserWithAddressService = async (id: number): Promise<boolean> => {
   const userInDb = await db.query.user.findFirst({
     where: eq(user.id, id),
   });
@@ -457,19 +401,14 @@ export const deleteUserWithAddressService = async (
   if (!userAddress) return false;
 
   const userInDbDeleted: boolean = await db.transaction(async (tx) => {
-    const isAddressDeleted = await tx
-      .delete(AddressTable)
-      .where(eq(address.userId, userInDb.id));
+    const isAddressDeleted = await tx.delete(AddressTable).where(eq(address.userId, userInDb.id));
 
     if (!isAddressDeleted) {
       tx.rollback();
       return false;
     }
 
-    const isUserDeleted = await tx
-      .delete(UsersTable)
-      .where(eq(user.id, id))
-      .returning();
+    const isUserDeleted = await tx.delete(UsersTable).where(eq(user.id, id)).returning();
 
     if (!isUserDeleted) {
       tx.rollback();
@@ -487,9 +426,7 @@ export const deleteUserWithAddressService = async (
  *
  * @returns IntegratedUserData[]
  */
-export const getAllUsersWithAddressService = async (): Promise<
-  IntegratedUserData[]
-> => {
+export const getAllUsersWithAddressService = async (): Promise<IntegratedUserData[]> => {
   const users = await db
     .select({
       id: user.id,

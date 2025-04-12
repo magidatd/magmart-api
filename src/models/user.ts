@@ -42,3 +42,28 @@ export interface UserWithOrders extends User {
     totalPrice: number;
   }[];
 }
+
+export interface PartialUserData {
+  firstName?: string;
+  lastName?: string;
+  userImage?: string;
+  email?: string;
+  password?: string;
+  role?: string | null;
+}
+
+export interface IntegratedUserData {
+  id: number;
+  userIdInAddress: number;
+  firstName: string;
+  lastName: string;
+  userImage?: string;
+  email: string;
+  password?: string;
+  role?: string | null;
+  streetAddress: string;
+  postalCode: string;
+  city: string;
+  phone: string;
+  country: string;
+}
